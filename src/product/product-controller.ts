@@ -10,11 +10,13 @@ import { UploadedFile } from 'express-fileupload';
 import { AuthRequest } from '../common/types';
 import { Roles } from '../common/constants';
 import mongoose from 'mongoose';
+import { MessageProducerBroker } from '../common/types/broker';
 
 export class ProductController {
     constructor(
         private productService: ProductService,
         private storage: FileStorage,
+        private broker: MessageProducerBroker,
     ) {}
 
     create = async (req: ProductRequest, res: Response, next: NextFunction) => {
@@ -57,6 +59,14 @@ export class ProductController {
 
         const newProduct = await this.productService.createProduct(
             product as unknown as Product,
+        );
+
+        await this.broker.sendMessage(
+            'product',
+            JSON.stringify({
+                id: newProduct._id,
+                priceConfiguration: newProduct.priceConfiguration,
+            }),
         );
 
         res.json({ id: newProduct._id });
@@ -127,7 +137,18 @@ export class ProductController {
             image: imageName ? imageName : (oldImage as string),
         };
 
-        await this.productService.updateProduct(productId, productToUpdate);
+        const updatedProduct = await this.productService.updateProduct(
+            productId,
+            productToUpdate,
+        );
+
+        await this.broker.sendMessage(
+            'product',
+            JSON.stringify({
+                id: updatedProduct._id,
+                priceConfiguration: updatedProduct.priceConfiguration,
+            }),
+        );
 
         res.json({ id: productId });
     };
