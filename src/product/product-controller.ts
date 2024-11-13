@@ -11,6 +11,7 @@ import { AuthRequest } from '../common/types';
 import { Roles } from '../common/constants';
 import mongoose from 'mongoose';
 import { MessageProducerBroker } from '../common/types/broker';
+import { mapToObject } from '../common/utils/mapToObject';
 
 export class ProductController {
     constructor(
@@ -65,7 +66,13 @@ export class ProductController {
             'product',
             JSON.stringify({
                 id: newProduct._id,
-                priceConfiguration: newProduct.priceConfiguration,
+                // todo: fix the typescript error
+                priceConfiguration: mapToObject(
+                    newProduct.priceConfiguration as unknown as Map<
+                        string,
+                        any
+                    >,
+                ),
             }),
         );
 
@@ -146,7 +153,12 @@ export class ProductController {
             'product',
             JSON.stringify({
                 id: updatedProduct._id,
-                priceConfiguration: updatedProduct.priceConfiguration,
+                priceConfiguration: mapToObject(
+                    updatedProduct.priceConfiguration as unknown as Map<
+                        string,
+                        any
+                    >,
+                ),
             }),
         );
 
